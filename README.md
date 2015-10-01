@@ -42,6 +42,9 @@ mycompany:
 
 Each entry must specify a `server`. All other fields get passed as options to openconnect -- see `$ man openconnect` to find out what they are.  Options that don't take values can be specified using the value `true`.
 
+## Last but not least...
+
+Comments, suggestions, and pull requests are all welcome!
 
 
 
