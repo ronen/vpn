@@ -7,6 +7,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["ronen@barzel.org"]
 
   spec.summary       = %q{A shell command for making vpn connections.  It's a wrapper around openconnect.}
+  spec.description   = %q{Lets you set up one or more vpn configurations, then connect via `vpn up` and `vpn down`.}
   spec.homepage      = "http://github.com/ronen/vpn"
   spec.license       = "MIT"
 
