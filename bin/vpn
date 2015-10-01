@@ -1,0 +1,55 @@
+#!/usr/bin/env ruby
+
+require 'pathname'
+require 'yaml'
+
+CONFIG_FILENAME = "~/.vpn"
+PIDFILE = "/tmp/openconnect.pid"
+
+defaults = {
+    "background" => true,
+    "passwd-on-stdin" => true,
+    "pid-file" => PIDFILE,
+    "quiet" => true,
+}
+
+def pid
+    File.read(PIDFILE).to_i
+end
+
+def passwd(site)
+    STDOUT.write "#{site} vpn password: "
+    STDOUT.flush
+     begin
+       system "stty -echo"
+       @password = STDIN.gets.chomp
+     ensure
+       system "stty echo"
+     end
+end
+
+def sudo(cmd)
+    system "sudo -p 'sudo password: ' #{cmd}"
+end
+
+def load_config
+    begin
+        YAML.load Pathname(CONFIG_FILENAME).expand_path.read
+    rescue Errno::ENOENT => e
+        abort "Could not open config file #{e.message.sub(".* - ", '')}"
+    end
+end
+
+case ARGV.shift
+when "up" then
+    config = load_config
+    site = ARGV.shift || config.keys.first
+    config.include? site or abort "#{site} not listed in #{CONFIG_FILENAME}"
+    opts = defaults.merge config[site]
+    server = opts.delete("server") or abort "#{CONFIG_FILENAME} must specify a server"
+    args = opts.map{ |key, val| val == true ? "--#{key}" : "--#{key}=#{val}"}.join(' ')
+    sudo "openconnect #{args} #{server} <<< #{passwd site}"
+when "down" then sudo "kill -s HUP #{pid}"
+when "reset" then sudo "kill -s USR2 #{pid}"
+else abort "usage: #{$0} up [site]|down|reset"
+end
