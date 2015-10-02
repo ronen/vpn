@@ -93,7 +93,7 @@ class ConfigData
 
 end
         
-if __FILE__ == $0
+unless defined? RSpec
 
     vpn = Vpn.new
 
