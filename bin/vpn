@@ -24,6 +24,7 @@ def passwd(site)
        system "stty -echo"
        @password = STDIN.gets.chomp
      ensure
+       puts "\n"
        system "stty echo"
      end
 end
