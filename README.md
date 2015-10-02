@@ -1,5 +1,6 @@
 # vpn
 [![Gem Version](https://badge.fury.io/rb/vpn.png)](http://badge.fury.io/rb/vpn)
+[![Build Status](https://travis-ci.org/ronen/vpn.svg?branch=master)](https://travis-ci.org/ronen/vpn)
 
 A shell command for making vpn connections.  It's a convenience wrapper around [openconnect](http://www.infradead.org/openconnect/), in which you set up a configuration file with connection details, then just "vpn up" to connect.
 
