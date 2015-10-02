@@ -3,6 +3,8 @@
 
 A shell command for making vpn connections.  It's a convenience wrapper around [openconnect](http://www.infradead.org/openconnect/), in which you set up a configuration file with connection details, then just "vpn up" to connect.
 
+Requires ruby version >= 2.1.0
+
 ## Usage
 
 ```sh
