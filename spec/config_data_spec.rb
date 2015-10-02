@@ -1,12 +1,12 @@
 require "spec_helper"
 
-describe Config do
+describe ConfigData do
 
   context "without a config file" do
     before(:each) { mock_config(nil) }
 
     it "aborts" do
-      expect { Config.new("site") }.to raise_error SystemExit, %r{Could not open config file ~/.vpn}
+      expect { ConfigData.new("site") }.to raise_error SystemExit, %r{Could not open config file ~/.vpn}
     end
   end
 
@@ -14,19 +14,19 @@ describe Config do
     before(:each) { mock_config }
 
     it "uses first site if none specified" do
-      config = Config.new(nil)
+      config = ConfigData.new(nil)
       expect(config.site).to eq "site0"
       expect(config.opts).to eq( {"opt0" => "val0"} )
     end
 
     it "uses specified site" do
-      config = Config.new("site1")
+      config = ConfigData.new("site1")
       expect(config.site).to eq("site1")
       expect(config.opts).to eq( {"opt1" => "val1"} )
     end
 
     it "aborts if unlisted site specified" do
-      expect { Config.new("nonesuch") }.to raise_error SystemExit, %r{nonesuch not listed in ~/.vpn}
+      expect { ConfigData.new("nonesuch") }.to raise_error SystemExit, %r{nonesuch not listed in ~/.vpn}
     end
   end
 

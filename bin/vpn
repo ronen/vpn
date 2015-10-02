@@ -77,7 +77,7 @@ class Vpn
 
 end
 
-class Config
+class ConfigData
     attr_reader :site, :opts, :filename
     def initialize(site)
         @filename = CONFIG_FILENAME
@@ -98,7 +98,7 @@ if __FILE__ == $0
     vpn = Vpn.new
 
     case ARGV.shift
-    when "up" then vpn.up Config.new(ARGV.shift)
+    when "up" then vpn.up ConfigData.new(ARGV.shift)
     when "down" then vpn.down
     when "reset" then vpn.reset
     when "status" then puts "vpn is #{vpn.connected? ? "up" : "down" }"
