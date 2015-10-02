@@ -48,14 +48,10 @@ Each entry must specify a `server`. All other fields get passed as options to op
 
 ## History
 
-* 0.2.0 - add 
+* 0.2.1 - Fix so it runs when installed as a gem
+* 0.2.0 - Add `vpn status`
 * 0.1.0 - Initial release
 
 ## Last but not least...
 
 Comments, suggestions, and pull requests are all welcome!
-
-
-
-
-
