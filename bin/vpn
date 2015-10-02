@@ -1,56 +1,107 @@
 #!/usr/bin/env ruby
 
 require 'pathname'
+require 'shellwords'
 require 'yaml'
 
 CONFIG_FILENAME = "~/.vpn"
 PIDFILE = "/tmp/openconnect.pid"
 
-defaults = {
-    "background" => true,
-    "passwd-on-stdin" => true,
-    "pid-file" => PIDFILE,
-    "quiet" => true,
-}
+class Vpn
 
-def pid
-    File.read(PIDFILE).to_i
-end
+    DEFAULTS = {
+        "background" => true,
+        "passwd-on-stdin" => true,
+        "pid-file" => PIDFILE,
+        "quiet" => true,
+    }
 
-def passwd(site)
-    STDOUT.write "#{site} vpn password: "
-    STDOUT.flush
-     begin
-       system "stty -echo"
-       @password = STDIN.gets.chomp
-     ensure
-       puts "\n"
-       system "stty echo"
-     end
-end
-
-def sudo(cmd)
-    system "sudo -p 'sudo password: ' #{cmd}"
-end
-
-def load_config
-    begin
-        YAML.load Pathname(CONFIG_FILENAME).expand_path.read
-    rescue Errno::ENOENT => e
-        abort "Could not open config file #{e.message.sub(".* - ", '')}"
+    def up(config)
+        abort "vpn is already up" if connected?
+        opts = DEFAULTS.merge config.opts
+        server = opts.delete("server") or abort "#{config.site} in #{config.filename} must specify a server"
+        args = opts.map{ |key, val| val == true ? "--#{key}" : "--#{key}=#{Shellwords.escape val}"}.join(' ')
+        sudo "openconnect #{args} #{server} <<< #{Shellwords.escape (passwd config.site)}"
     end
+
+    def down
+        abort "vpn is already down" unless connected?
+        kill(:HUP)
+    end
+
+    def reset
+        abort "vpn is not up" unless connected?
+        kill(:USR2)
+    end
+
+    def connected?
+        !!pid
+    end
+
+    private
+
+    def pid
+        @pid ||= begin
+                     pid = File.read(PIDFILE).to_i # get process id
+                     Process.kill 0, pid # probe process
+                     pid
+                 rescue Errno::ENOENT # no PIDFILE
+                     nil
+                 rescue Errno::EPERM # process exists but no permission (because of sudo)
+                     pid
+                 rescue SystemCallError => e # no process
+                     nil
+                 end
+    end
+
+    def sudo(cmd)
+        system "sudo -p 'sudo password: ' #{cmd}"
+    end
+
+    def kill(signal)
+        sudo "kill -s #{signal} #{pid}"
+    end
+
+    def passwd(site)
+        $stdout.write "#{site} vpn password: "
+        $stdout.flush
+        begin
+            system "stty -echo"
+            @password = $stdin.gets.chomp
+        ensure
+            puts "\n"
+            system "stty echo"
+        end
+    end
+
+
 end
 
-case ARGV.shift
-when "up" then
-    config = load_config
-    site = ARGV.shift || config.keys.first
-    config.include? site or abort "#{site} not listed in #{CONFIG_FILENAME}"
-    opts = defaults.merge config[site]
-    server = opts.delete("server") or abort "#{CONFIG_FILENAME} must specify a server"
-    args = opts.map{ |key, val| val == true ? "--#{key}" : "--#{key}=#{val}"}.join(' ')
-    sudo "openconnect #{args} #{server} <<< #{passwd site}"
-when "down" then sudo "kill -s HUP #{pid}"
-when "reset" then sudo "kill -s USR2 #{pid}"
-else abort "usage: #{$0} up [site]|down|reset"
+class Config
+    attr_reader :site, :opts, :filename
+    def initialize(site)
+        @filename = CONFIG_FILENAME
+        begin
+            @config = YAML.load Pathname(@filename).expand_path.read
+        rescue Errno::ENOENT => e
+            abort "Could not open config file #{@filename}"
+        end
+        @site = site || @config.keys.first
+        @config.include? @site or abort "#{@site} not listed in #{CONFIG_FILENAME}"
+        @opts = @config[@site]
+    end
+
+end
+        
+if __FILE__ == $0
+
+    vpn = Vpn.new
+
+    case ARGV.shift
+    when "up" then vpn.up Config.new(ARGV.shift)
+    when "down" then vpn.down
+    when "reset" then vpn.reset
+    when "status" then puts "vpn is #{vpn.connected? ? "up" : "down" }"
+    else abort "usage: #{File.basename $0} up [site]|down|reset|status"
+    end
 end
