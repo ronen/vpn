@@ -12,6 +12,7 @@ Requires ruby version >= 2.1.0
 $ vpn up [site]
 $ vpn down
 $ vpn reset # if your lan connection glitches
+$ vpn status # tells you if vpn is up or down
 ```
 
 The script will prompt for your vpn password on the site as well as for the sudo password on your machine (if needed).
@@ -44,6 +45,11 @@ mycompany:
 ```
 
 Each entry must specify a `server`. All other fields get passed as options to openconnect -- see `$ man openconnect` to find out what they are.  Options that don't take values can be specified using the value `true`.
+
+## History
+
+* 0.2.0 - add 
+* 0.1.0 - Initial release
 
 ## Last but not least...
 
